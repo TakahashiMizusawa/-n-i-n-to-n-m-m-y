@@ -30,7 +30,10 @@ const connection = mysql.createConnection({
     port:12666, 
     user: 'avnadmin',     
     password: 'AVNS_1dmnhkjJtV6SOOb8uEV',   
-    database: 'defaultdb'
+    database: 'defaultdb',
+    ssl: {
+        rejectUnauthorized: false 
+    }
 });
 
 connection.connect(err => {
