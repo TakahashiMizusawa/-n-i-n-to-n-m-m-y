@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý kho thuốc - Nam Nguyễn Pharma</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main: #9d50bb; --bg: #f8f5ff; --edit: #f39c12; --delete: #e74c3c; }
+        body { font-family: sans-serif; background: var(--bg); padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .header-actions { display: flex; gap: 10px; margin-bottom: 20px; }
+        
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; }
+        .btn-edit { background: var(--edit); }
+        .btn-delete { background: var(--delete); }
+        .btn-add { background: #2ecc71; }
+        .btn-home { background: var(--main); } /* NÚT QUAY LẠI MÀU TÍM */
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f2f2f2; color: #333; }
+        .img-product { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
+
+        /* MODAL STYLE */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; width: 400px; margin: 10% auto; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+        .modal-content input, .modal-content textarea { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2><i class="fas fa-pills"></i> QUẢN LÝ KHO THUỐC</h2>
+    
+    <div class="header-actions">
+        <a href="index.html" class="btn btn-home">
+            <i class="fas fa-arrow-left"></i> Quay lại Trang chủ
+        </a>
+        
+        <a href="add-medicine.html" class="btn btn-add">
+            <i class="fas fa-plus"></i> Thêm thuốc mới
+        </a>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Ảnh</th>
+                <th>Tên thuốc</th>
+                <th>Giá (VNĐ)</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody id="medicineTableBody">
+            </tbody>
+    </table>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>Sửa thông tin thuốc</h3>
+        <form id="editForm">
+            <input type="hidden" id="editId">
+            <label>Tên thuốc:</label>
+            <input type="text" id="editName" required>
+            <label>Giá bán:</label>
+            <input type="number" id="editPrice" required>
+            <label>Mô tả:</label>
+            <textarea id="editDesc" rows="4"></textarea>
+            <label>Ảnh mới (nếu muốn đổi):</label>
+            <input type="file" id="editImage" accept="image/*">
+            <div style="text-align: right; margin-top: 10px;">
+                <button type="button" onclick="closeModal()" style="background:#ccc; padding:8px 15px; border:none; border-radius:5px; cursor:pointer;">Hủy</button>
+                <button type="submit" class="btn btn-edit">Cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const serverURL = "http://localhost:3000";
+
+    // 1. Tải danh sách thuốc
+    async function loadMedicines() {
+        try {
+            const res = await fetch(`${serverURL}/api/products`);
+            const data = await res.json();
+            const tbody = document.getElementById('medicineTableBody');
+            tbody.innerHTML = "";
+            
+            data.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${serverURL}${p.image_urls}" class="img-product" onerror="this.src='https://via.placeholder.com/50'"></td>
+                        <td>${p.name}</td>
+                        <td>${Number(p.price).toLocaleString()}đ</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="openEditModal(${p.id}, '${p.name}', ${p.price}, '${p.description || ''}')"><i class="fas fa-edit"></i> Sửa</button>
+                            <button class="btn btn-delete" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (e) {
+            console.error("Lỗi kết nối server:", e);
+        }
+    }
+
+    // 2. Mở Modal sửa
+    function openEditModal(id, name, price, desc) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editName').value = name;
+        document.getElementById('editPrice').value = price;
+        document.getElementById('editDesc').value = desc;
+        document.getElementById('editModal').style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').style.display = "none";
+    }
+
+    // 3. Gửi dữ liệu sửa lên server
+    document.getElementById('editForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editId').value;
+        const formData = new FormData();
+        formData.append('name', document.getElementById('editName').value);
+        formData.append('price', document.getElementById('editPrice').value);
+        formData.append('description', document.getElementById('editDesc').value);
+        
+        const fileInput = document.getElementById('editImage');
+        if (fileInput.files[0]) formData.append('image_urls', fileInput.files[0]);
+
+        const res = await fetch(`${serverURL}/api/products/${id}`, {
+            method: 'PUT',
+            body: formData
+        });
+
+        if (res.ok) {
+            alert("Đã cập nhật xong!");
+            closeModal();
+            loadMedicines();
+        }
+    };
+
+    // 4. Xóa thuốc
+    async function deleteProduct(id) {
+        if(confirm("Nam có chắc muốn xóa loại thuốc này?")) {
+            await fetch(`${serverURL}/api/products/${id}`, { method: 'DELETE' });
+            loadMedicines();
+        }
+    }
+
+    window.onload = loadMedicines;
+</script>
+</body>
+</html>

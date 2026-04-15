@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết sản phẩm - Nam Nguyễn Pharma</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main-purple: #9d50bb; --bg-color: #f8f5ff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 50px; }
+        
+        header {
+            background: white; padding: 10px 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { cursor: pointer; display: flex; align-items: center; text-decoration: none; }
+        .logo img { height: 45px; }
+        .logo span { color: var(--main-purple); font-weight: bold; font-size: 18px; margin-left: 10px; }
+
+        .container { max-width: 1000px; margin: 20px auto; background: white; padding: 20px; border-radius: 15px; display: flex; gap: 30px; }
+        
+        .product-media { flex: 1; position: relative; }
+        .slide-container { position: relative; width: 100%; height: 400px; overflow: hidden; border-radius: 10px; }
+        .slide-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .slide-img.active { display: block; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 50%; z-index: 10; }
+        .next { right: 10px; } .prev { left: 10px; }
+        video { width: 100%; margin-top: 15px; border-radius: 10px; background: #000; }
+
+        .product-info { flex: 1; }
+        .price { font-size: 28px; color: #e91e63; font-weight: bold; margin: 15px 0; }
+        .btn-buy { background: var(--main-purple); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; cursor: pointer; width: 100%; font-size: 18px; transition: 0.3s; }
+        .btn-buy:hover { background: #8a3eb1; transform: scale(1.02); }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 400px; position: relative; box-shadow: 0 5px 30px rgba(0,0,0,0.2); }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
+
+        .reviews { max-width: 1000px; margin: 20px auto; background: white; padding: 20px; border-radius: 15px; }
+        .review-item { display: flex; align-items: flex-start; gap: 15px; margin-top: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .review-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="logo">
+        <img src="/public/imgs/logo.png" alt="Logo"> <span>NAM NGUYỄN PHARMA</span>
+    </a>
+</header>
+
+<div class="container">
+    <div class="product-media">
+        <div class="slide-container" id="slideBox">
+            <button class="nav-btn prev" onclick="changeSlide(-1)">&#10094;</button>
+            <button class="nav-btn next" onclick="changeSlide(1)">&#10095;</button>
+        </div>
+        <div id="videoContainer"></div>
+    </div>
+
+    <div class="product-info">
+        <h1 id="pName" style="color: var(--main-purple);">Đang tải...</h1>
+        <hr style="border: 0; border-top: 1px solid #eee;">
+        <p id="pDesc" style="line-height: 1.6; color: #555;"></p>
+        <div class="price" id="pPrice">0 VNĐ</div>
+        <button class="btn-buy" onclick="openOrderModal()">MUA NGAY</button>
+    </div>
+</div>
+
+<div id="orderModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--main-purple); text-align: center;">Thông tin đặt hàng</h3>
+        <label>Địa chỉ giao hàng:</label>
+        <input type="text" id="orderAddress" placeholder="Để trống nếu lấy địa chỉ mặc định">
+        <label>Số lượng:</label>
+        <input type="number" id="orderQty" value="1" min="1" onchange="calcTotal()">
+        <label>Ghi chú:</label>
+        <textarea id="orderNote" placeholder="Ghi chú cho shipper..."></textarea>
+        <h4 id="orderTotalText" style="text-align: right; font-size: 20px; color: #e91e63;">Tổng tiền: 0 VNĐ</h4>
+        <button class="btn-buy" onclick="confirmOrder()">XÁC NHẬN ĐẶT HÀNG</button>
+        <button onclick="closeOrderModal()" style="width:100%; margin-top:10px; border:none; background:none; cursor:pointer; color:#777;">Đóng</button>
+    </div>
+</div>
+
+<div class="reviews">
+    <h3 style="color: var(--main-purple);"><i class="fa-solid fa-comments"></i> Đánh giá sản phẩm</h3>
+    <textarea id="revContent" style="width:100%; height:80px; padding:10px; border-radius:10px; border:1px solid #ddd;" placeholder="Viết cảm nhận của Nam..."></textarea>
+    <button onclick="postReview()" style="margin-top:10px; padding:10px 25px; background:var(--main-purple); color:white; border:none; border-radius:20px; cursor:pointer;">Đăng đánh giá</button>
+    
+    <div id="reviewList" style="margin-top: 20px;"></div>
+</div>
+
+<script>
+    const serverURL = "http://localhost:3000";
+    let currentProduct = null;
+    let slideIndex = 0;
+
+    window.onload = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if(!id) return location.href = 'index.html';
+
+        try {
+            const res = await fetch(`${serverURL}/api/products/${id}`);
+            currentProduct = await res.json();
+
+            document.getElementById('pName').innerText = currentProduct.name;
+            document.getElementById('pDesc').innerText = currentProduct.description;
+            document.getElementById('pPrice').innerText = Number(currentProduct.price).toLocaleString() + " VNĐ";
+
+            const images = currentProduct.image_urls.split(',');
+            const slideBox = document.getElementById('slideBox');
+            images.forEach((img, index) => {
+                const imgTag = document.createElement('img');
+                imgTag.src = img.startsWith('/uploads') ? serverURL + img : img;
+                imgTag.className = `slide-img ${index === 0 ? 'active' : ''}`;
+                slideBox.appendChild(imgTag);
+            });
+
+            if(currentProduct.video_url) {
+                document.getElementById('videoContainer').innerHTML = `<video controls src="${currentProduct.video_url}"></video>`;
+            }
+
+            loadReviews(id);
+        } catch (error) { console.error("Lỗi:", error); }
+    };
+
+    async function loadReviews(productId) {
+        const res = await fetch(`${serverURL}/api/reviews/${productId}`);
+        const reviews = await res.json();
+        const list = document.getElementById('reviewList');
+        list.innerHTML = reviews.map(rev => `
+            <div class="review-item">
+                <img src="${rev.avatar_url ? (rev.avatar_url.startsWith('http') ? rev.avatar_url : serverURL + rev.avatar_url) : 'https://via.placeholder.com/50'}" class="review-avatar">
+                <div>
+                    <b style="color:var(--main-purple)">${rev.fullname}</b>
+                    <p style="margin:5px 0;">${rev.content}</p>
+                    <small style="color:#999">${new Date(rev.created_at).toLocaleString()}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function openOrderModal() {
+        if(!localStorage.getItem('user')) return alert("Nam ơi, đăng nhập đã nhé!");
+        document.getElementById('orderModal').style.display = 'flex';
+        calcTotal();
+    }
+
+    function closeOrderModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+    function calcTotal() {
+        const qty = document.getElementById('orderQty').value;
+        document.getElementById('orderTotalText').innerText = `Tổng tiền: ${(qty * currentProduct.price).toLocaleString()} VNĐ`;
+    }
+
+    // --- HÀM XÁC NHẬN ĐẶT HÀNG THẬT ---
+    async function confirmOrder() {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const qty = document.getElementById('orderQty').value;
+        const address = document.getElementById('orderAddress').value || user.address || "Địa chỉ mặc định";
+
+        const orderData = {
+            userId: user.id,
+            productId: currentProduct.id,
+            quantity: qty,
+            address: address,
+            note: document.getElementById('orderNote').value,
+            totalPrice: qty * currentProduct.price
+        };
+
+        const res = await fetch(`${serverURL}/api/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        if(res.ok) {
+            alert("√ Đơn hàng đã được đặt thành công , hãy chú ý đến điện thoại và chuẩn bị sẵn tiền mặt");
+            closeOrderModal();
+        }
+    }
+
+    // --- HÀM ĐĂNG ĐÁNH GIÁ THẬT ---
+    async function postReview() {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const content = document.getElementById('revContent').value.trim();
+        if(!user || !content) return alert("Kiểm tra lại nội dung nhé!");
+
+        const res = await fetch(`${serverURL}/api/reviews`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId: currentProduct.id, userId: user.id, content: content })
+        });
+
+        if(res.ok) {
+            document.getElementById('revContent').value = "";
+            loadReviews(currentProduct.id);
+        }
+    }
+
+    function changeSlide(n) {
+        const imgs = document.querySelectorAll('.slide-img');
+        if(imgs.length <= 1) return;
+        imgs[slideIndex].classList.remove('active');
+        slideIndex = (slideIndex + n + imgs.length) % imgs.length;
+        imgs[slideIndex].classList.add('active');
+    }
+</script>
+</body>
+</html>

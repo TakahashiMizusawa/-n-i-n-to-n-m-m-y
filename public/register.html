@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký - Cửa hàng thuốc Nam Nguyễn</title>
+    <style>
+        :root { --main-purple: #9d50bb; --light-purple: #e0c3fc; }
+        body { background: linear-gradient(to right, var(--main-purple), var(--light-purple)); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 450px; }
+        h2 { color: var(--main-purple); text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--main-purple); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; transition: 0.3s; }
+        button:hover { background: #6e308a; }
+        .link { text-align: center; margin-top: 15px; font-size: 14px; }
+        .link a { color: var(--main-purple); text-decoration: none; font-weight: bold; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Đăng Ký Tài Khoản</h2>
+        <form id="registerForm">
+            <div class="form-group"><label>Họ và Tên</label><input type="text" id="fullname" required></div>
+            <div class="form-group"><label>Tên tài khoản</label><input type="text" id="username" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+            <div class="form-group"><label>Địa chỉ giao hàng</label><input type="text" id="address" required></div>
+            
+            <div class="form-group">
+                <label>Ảnh đại diện</label>
+                <input type="file" id="avatar" accept="image/*">
+            </div>
+
+            <div class="form-group"><label>Mật khẩu</label><input type="password" id="password" required></div>
+            <div class="form-group"><label>Xác nhận mật khẩu</label><input type="password" id="confirmPassword" required></div>
+            
+            <hr>
+            <p style="font-size: 12px; color: #888;">* Thông tin bảo mật để sửa tài khoản sau này</p>
+            <div class="form-group">
+                <label>Câu hỏi bảo mật</label>
+                <input type="text" id="security_question" placeholder="Ví dụ: Tên con vật đầu tiên của bạn?" required>
+            </div>
+            <div class="form-group">
+                <label>Câu trả lời</label>
+                <input type="text" id="security_answer" required>
+            </div>
+            <button type="submit">Đăng Ký</button>
+        </form>
+        <div class="link">Đã có tài khoản? <a href="login.html" target="_self">Đăng nhập ngay</a></div>
+    </div>
+
+ <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if(password !== confirm) {
+            return alert("Mật khẩu xác nhận không khớp!");
+        }
+
+        const formData = new FormData();
+        formData.append('fullname', document.getElementById('fullname').value);
+        formData.append('username', document.getElementById('username').value);
+        formData.append('email', document.getElementById('email').value);
+        formData.append('address', document.getElementById('address').value);
+        formData.append('password', password);
+        formData.append('security_question', document.getElementById('security_question').value);
+        formData.append('security_answer', document.getElementById('security_answer').value);
+        
+        const avatarFile = document.getElementById('avatar').files[0];
+        if (avatarFile) {
+            formData.append('avatar', avatarFile);
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/api/register', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if(response.ok) {
+                alert("Đăng ký thành công!");
+                // Lệnh này luôn chuyển trang ngay tại tab hiện tại
+                window.location.assign('login.html'); 
+            } else {
+                alert("Lỗi: " + (result.error || "Không xác định"));
+            }
+        } catch (error) {
+            console.error("Lỗi kết nối:", error);
+            alert("Không thể kết nối đến Server!");
+        }
+    });
+</script>
+</body>
+</html>

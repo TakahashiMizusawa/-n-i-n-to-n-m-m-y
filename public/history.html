@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử mua hàng - Nam Nguyễn Pharma</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main-purple: #9d50bb; --bg-color: #f8f5ff; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--main-purple); text-align: center; margin-bottom: 30px; }
+        .order-card {
+            display: flex; align-items: center; padding: 15px;
+            border-bottom: 1px solid #eee; transition: 0.3s;
+        }
+        .order-card:hover { background: #fdfbff; }
+        .order-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-right: 20px; }
+        .order-info { flex: 1; }
+        .order-name { font-weight: bold; font-size: 18px; color: #333; }
+        .order-meta { font-size: 14px; color: #666; margin-top: 5px; }
+        .order-price { color: var(--main-purple); font-weight: bold; font-size: 16px; }
+        .status { color: #27ae60; font-weight: bold; font-size: 13px; }
+        .btn-back {
+            display: inline-block; margin-bottom: 20px; text-decoration: none;
+            color: var(--main-purple); font-weight: bold;
+        }
+        .empty-msg { text-align: center; padding: 50px; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
+    <h2><i class="fas fa-shopping-bag"></i> Lịch sử mua hàng của bạn</h2>
+    
+    <div id="orderList">
+        </div>
+</div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    const serverURL = "http://localhost:3000";
+
+    if (!user) {
+        window.location.assign('login.html');
+    }
+
+    async function loadHistory() {
+        try {
+            const response = await fetch(`${serverURL}/api/orders/${user.id}`);
+            const orders = await response.json();
+            const container = document.getElementById('orderList');
+
+            if (orders.length === 0) {
+                container.innerHTML = `<div class="empty-msg">Bạn chưa mua sản phẩm nào.</div>`;
+                return;
+            }
+
+            container.innerHTML = orders.map(order => {
+                const date = new Date(order.created_at).toLocaleString('vi-VN');
+                // Xử lý ảnh sản phẩm
+                let img = order.image_urls;
+                if (!img.startsWith('http')) {
+                    img = img.startsWith('/') ? serverURL + img : serverURL + '/' + img;
+                }
+
+                return `
+                    <div class="order-card">
+                        <img src="${img}" onerror="this.src='https://via.placeholder.com/80'">
+                        <div class="order-info">
+                            <div class="order-name">${order.product_name}</div>
+                            <div class="order-meta">Ngày mua: ${date}</div>
+                            <div class="order-meta">Số lượng: ${order.quantity} | Địa chỉ: ${order.address}</div>
+                            <div class="order-meta">Ghi chú: ${order.note || 'Không có'}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="order-price">${Number(order.total_price).toLocaleString()} đ</div>
+                            <div class="status">Đã xác nhận</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error("Lỗi:", error);
+        }
+    }
+
+    loadHistory();
+</script>
+
+</body>
+</html>

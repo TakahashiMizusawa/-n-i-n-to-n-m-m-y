@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản của tôi - Nam Nguyễn Pharma</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --main-purple: #9d50bb;
+            --light-purple: #e0c3fc;
+            --bg-color: #f8f5ff;
+            --danger: #e74c3c;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-color); color: #333; }
+
+        /* Header (Giữ nguyên từ trang chủ) */
+        header {
+            background: white; padding: 10px 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { cursor: pointer; display: flex; align-items: center; text-decoration: none; }
+        .logo img { height: 45px; }
+        .logo span { color: var(--main-purple); font-weight: bold; font-size: 18px; margin-left: 10px; }
+
+        .profile-container { max-width: 600px; margin: 40px auto; padding: 20px; }
+
+        /* Profile Card */
+        .profile-card {
+            background: white; border-radius: 20px; padding: 30px;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .avatar-large {
+            width: 120px; height: 120px; border-radius: 50%;
+            border: 4px solid var(--light-purple); object-fit: cover; margin-bottom: 15px;
+        }
+
+        .user-fullname { font-size: 24px; font-weight: bold; color: var(--main-purple); margin: 0; }
+        .user-role { font-size: 14px; color: #777; margin-bottom: 20px; }
+
+        .info-group { text-align: left; border-top: 1px solid #eee; padding-top: 20px; }
+        .info-item { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 16px; }
+        .info-label { font-weight: bold; color: #555; }
+        .info-value { color: #222; }
+
+        /* Buttons */
+        .action-btns { display: flex; gap: 15px; margin-top: 30px; }
+        .btn {
+            flex: 1; padding: 12px; border-radius: 30px; border: none;
+            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-edit { background: var(--main-purple); color: white; text-decoration: none; }
+        .btn-edit:hover { background: #8a3eb1; transform: translateY(-2px); }
+        .btn-delete { background: #f2f2f2; color: #555; }
+        .btn-delete:hover { background: #e0e0e0; color: var(--danger); }
+
+        /* Modal Xóa tài khoản */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 15px;
+            width: 90%; max-width: 400px; text-align: center;
+        }
+        .modal-content h3 { color: var(--danger); margin-top: 0; }
+        .modal-input {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+        }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-confirm { background: var(--danger); color: white; }
+        .btn-cancel { background: #eee; color: #333; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">
+            <img src="/public/imgs/logo.png" alt="Logo"> <span>NAM NGUYỄN PHARMA</span>
+        </a>
+        <button onclick="window.location.assign('index.html')" style="background: none; border: 1px solid var(--main-purple); color: var(--main-purple); padding: 5px 15px; border-radius: 20px; cursor: pointer;">
+            <i class="fas fa-home"></i> Trang chủ
+        </button>
+    </header>
+
+    <div class="profile-container">
+        <div class="profile-card">
+            <img src="" id="largeAvatar" class="avatar-large" alt="Avatar">
+            <h2 id="dispFullname" class="user-fullname">Đang tải...</h2>
+            <p id="dispRole" class="user-role">Khách hàng</p>
+
+            <div class="info-group">
+                <div class="info-item">
+                    <span class="info-label">Tên đăng nhập:</span>
+                    <span id="dispUsername" class="info-value">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span id="dispEmail" class="info-value">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Số điện thoại:</span>
+                    <span id="dispPhone" class="info-value">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Địa chỉ:</span>
+                    <span id="dispAddress" class="info-value">...</span>
+                </div>
+            </div>
+
+            <div class="action-btns">
+                <a href="edit-profile.html" class="btn btn-edit">
+                    <i class="fas fa-user-edit"></i> Sửa tài khoản
+                </a>
+                <button class="btn btn-delete" onclick="openDeleteModal()">
+                    <i class="fas fa-trash-alt"></i> Xóa tài khoản
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3>Xác nhận xóa tài khoản?</h3>
+            <p style="font-size: 14px; color: #666;">Hành động này không thể hoàn tác. Vui lòng xác thực danh tính của bạn.</p>
+            
+            <input type="password" id="confirmPassword" class="modal-input" placeholder="Nhập mật khẩu hiện tại">
+            <input type="text" id="confirmAnswer" class="modal-input" placeholder="Câu trả lời bí mật lúc đăng ký">
+            
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="closeDeleteModal()">Hủy</button>
+                <button class="btn btn-confirm" onclick="handleDeleteAccount()">Xác nhận xóa</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        const serverURL = "http://localhost:3000";
+
+        // 1. Hiển thị thông tin từ LocalStorage
+        if (!user) {
+            window.location.assign('login.html');
+        } else {
+            // Ảnh đại diện
+            let avatarPath = user.avatar_url || 'https://via.placeholder.com/150';
+            if (avatarPath.startsWith('/uploads')) avatarPath = serverURL + avatarPath;
+            document.getElementById('largeAvatar').src = avatarPath;
+
+            // Thông tin chữ
+            document.getElementById('dispFullname').innerText = user.fullname;
+            document.getElementById('dispUsername').innerText = user.username;
+            document.getElementById('dispEmail').innerText = user.email || "Chưa cập nhật";
+            document.getElementById('dispPhone').innerText = user.phone || "Chưa cập nhật";
+            document.getElementById('dispAddress').innerText = user.address || "Chưa cập nhật";
+            
+            // Nếu là admin thì đổi nhãn role
+            if (user.username === 'admin') {
+                document.getElementById('dispRole').innerText = "Quản trị viên";
+                document.getElementById('dispRole').style.color = "#d32f2f";
+            }
+        }
+
+        // 2. Logic Modal Xóa
+        function openDeleteModal() {
+            if(user.username === 'admin') {
+                return alert("Không thể xóa tài khoản Quản trị viên!");
+            }
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // 3. Xử lý xóa tài khoản (Gửi lên server)
+        async function handleDeleteAccount() {
+            const password = document.getElementById('confirmPassword').value;
+            const security_answer = document.getElementById('confirmAnswer').value;
+
+            if (!password || !security_answer) {
+                return alert("Vui lòng nhập đầy đủ thông tin để xác nhận!");
+            }
+
+            try {
+                const response = await fetch(`${serverURL}/api/users/${user.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password, security_answer })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("Tài khoản của bạn đã được xóa thành công.");
+                    localStorage.removeItem('user');
+                    window.location.assign('login.html');
+                } else {
+                    alert(result.error || "Xác thực thất bại, không thể xóa tài khoản!");
+                }
+            } catch (error) {
+                console.error("Lỗi:", error);
+                alert("Lỗi kết nối server!");
+            }
+        }
+    </script>
+</body>
+</html>

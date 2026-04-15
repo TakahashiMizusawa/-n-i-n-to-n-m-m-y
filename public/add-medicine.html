@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm thuốc mới - Admin - Nam Nguyễn Pharma</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --main-purple: #9d50bb;
+            --light-purple: #e0c3fc;
+            --bg-color: #f8f5ff;
+            --success: #2ecc71;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-color); }
+
+        header {
+            background: white; padding: 10px 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { cursor: pointer; display: flex; align-items: center; text-decoration: none; }
+        .logo img { height: 45px; }
+        .logo span { color: var(--main-purple); font-weight: bold; font-size: 18px; margin-left: 10px; }
+
+        .admin-badge { background: #fee2e2; color: #dc2626; padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+
+        .container { max-width: 600px; margin: 40px auto; padding: 0 20px; }
+
+        .form-card {
+            background: white; border-radius: 15px; padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        h2 { color: var(--main-purple); text-align: center; margin-top: 0; margin-bottom: 25px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        
+        input[type="text"], 
+        input[type="number"], 
+        textarea {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 8px; box-sizing: border-box; outline: none;
+            transition: 0.3s;
+        }
+        
+        input:focus, textarea:focus { border-color: var(--main-purple); box-shadow: 0 0 5px rgba(157, 80, 187, 0.2); }
+        
+        textarea { resize: vertical; height: 100px; }
+
+        .file-input-wrapper {
+            border: 2px dashed #ddd; border-radius: 8px;
+            padding: 20px; text-align: center; cursor: pointer;
+            transition: 0.3s; color: #777;
+        }
+        .file-input-wrapper:hover { border-color: var(--main-purple); background-color: #faf5ff; color: var(--main-purple); }
+        .file-input-wrapper i { font-size: 30px; margin-bottom: 10px; display: block; }
+        #imageMedicine { display: none; }
+
+        .image-preview {
+            max-width: 100%; max-height: 200px; margin-top: 15px;
+            border-radius: 8px; display: none;
+            border: 1px solid #eee;
+        }
+
+        .btn-submit {
+            width: 100%; padding: 13px; background: var(--main-purple);
+            color: white; border: none; border-radius: 30px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            font-size: 16px; margin-top: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-submit:hover { background: #8a3eb1; transform: translateY(-2px); }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+        #statusMessage { text-align: center; margin-top: 15px; font-weight: bold; }
+        .success { color: var(--success); }
+        .error { color: #e74c3c; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">
+            <img src="/public/imgs/logo.png" alt="Logo"> <span>NAM NGUYỄN PHARMA</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="admin-badge">ADMIN PANEL</span>
+            <button onclick="window.location.assign('manage-medicine.html')" style="background: none; border: 1px solid #ddd; padding: 5px 15px; border-radius: 20px; cursor: pointer;">
+                <i class="fas fa-tasks"></i> Quản lý thuốc
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-card">
+            <h2><i class="fas fa-pills"></i> Thêm thuốc mới</h2>
+            
+            <form id="addMedicineForm">
+                <div class="form-group">
+                    <label for="nameMedicine">Tên thuốc:</label>
+                    <input type="text" id="nameMedicine" name="name" placeholder="Ví dụ: Panadol Extra 500mg" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="priceMedicine">Giá bán (VNĐ):</label>
+                    <input type="number" id="priceMedicine" name="price" placeholder="Ví dụ: 50000" required min="1000" step="500">
+                </div>
+
+                <div class="form-group">
+                    <label for="descMedicine">Mô tả sản phẩm:</label>
+                    <textarea id="descMedicine" name="description" placeholder="Mô tả công dụng, liều dùng..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Hình ảnh thuốc:</label>
+                    <label for="imageMedicine" class="file-input-wrapper" id="fileLabel">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span id="labelText">Nhấn để chọn ảnh hoặc kéo thả vào đây</span>
+                    </label>
+                    <input type="file" id="imageMedicine" name="image_urls" accept="image/*" required onchange="handleImagePreview(event)">
+                    
+                    <img id="imgPreview" class="image-preview" src="#" alt="Xem trước ảnh thuốc">
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnSubmit">
+                    <i class="fas fa-plus-circle"></i> XÁC NHẬN THÊM THUỐC
+                </button>
+            </form>
+            
+            <div id="statusMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        const serverURL = "http://localhost:3000";
+
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || user.username !== 'admin') {
+                alert("Bạn không có quyền truy cập trang này!");
+                window.location.assign('index.html');
+            }
+        };
+
+        function handleImagePreview(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            const preview = document.getElementById('imgPreview');
+            const labelText = document.getElementById('labelText');
+            const fileLabel = document.getElementById('fileLabel');
+
+            if (file) {
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    labelText.innerText = ` Đã chọn: ${file.name}`;
+                    fileLabel.style.borderColor = "var(--success)";
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+                labelText.innerText = "Nhấn để chọn ảnh hoặc kéo thả vào đây";
+                fileLabel.style.borderColor = "#ddd";
+            }
+        }
+
+        document.getElementById('addMedicineForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const btnSubmit = document.getElementById('btnSubmit');
+            const statusMsg = document.getElementById('statusMessage');
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            statusMsg.innerText = "";
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(`${serverURL}/api/products`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusMsg.innerText = `🎉 Thành công: ${result.message}`;
+                    statusMsg.className = "success";
+                    form.reset();
+                    document.getElementById('imgPreview').style.display = 'none';
+                    document.getElementById('labelText').innerText = "Nhấn để chọn ảnh hoặc kéo thả vào đây";
+                    document.getElementById('fileLabel').style.borderColor = "#ddd";
+                } else {
+                    statusMsg.innerText = `❌ Lỗi: ${result.error || 'Không thể thêm thuốc'}`;
+                    statusMsg.className = "error";
+                }
+            } catch (error) {
+                console.error("Lỗi kết nối:", error);
+                statusMsg.innerText = "❌ Lỗi kết nối đến server!";
+                statusMsg.className = "error";
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="fas fa-plus-circle"></i> XÁC NHẬN THÊM THUỐC';
+            }
+        });
+    </script>
+</body>
+</html>

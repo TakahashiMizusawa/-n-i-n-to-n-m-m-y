@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ - Cửa hàng thuốc Nam Nguyễn</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --main-purple: #9d50bb;
+            --light-purple: #e0c3fc;
+            --bg-color: #f8f5ff;
+            --admin-red: #d32f2f;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-color); }
+
+        header {
+            background: white; padding: 10px 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .logo { cursor: pointer; display: flex; align-items: center; }
+        .logo img { height: 50px; }
+        .logo span { color: var(--main-purple); font-weight: bold; font-size: 20px; margin-left: 10px; }
+
+        .search-bar { flex: 1; margin: 0 30px; }
+        .search-bar input {
+            width: 100%; padding: 12px 20px;
+            border: 2px solid var(--light-purple); border-radius: 25px;
+            outline: none; transition: 0.3s;
+        }
+        .search-bar input:focus { border-color: var(--main-purple); }
+
+        .user-menu { position: relative; display: inline-block; margin-left: 20px; }
+        .avatar {
+            width: 45px; height: 45px; border-radius: 50%;
+            cursor: pointer; border: 2px solid var(--main-purple);
+            object-fit: cover;
+        }
+
+        .dropdown-content {
+            display: none; position: absolute; right: 0;
+            background-color: white; min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 10px; overflow: hidden; z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: #333; padding: 12px 16px;
+            text-decoration: none; display: block; transition: 0.2s;
+        }
+
+        .dropdown-content a:hover { background-color: var(--bg-color); color: var(--main-purple); }
+        .user-menu:hover .dropdown-content { display: block; }
+
+        .admin-only { color: var(--admin-red) !important; font-weight: bold; border-left: 4px solid var(--admin-red); }
+
+        .promo-banner {
+            width: 90%; height: 100px; margin: 20px auto;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            border-radius: 15px; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 20px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; padding: 20px 5%; }
+
+        .product-card {
+            background: white; border-radius: 10px; padding: 15px;
+            text-align: center; transition: 0.3s; cursor: pointer; border: 1px solid #eee;
+        }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .product-card img { width: 100%; height: 180px; object-fit: contain; margin-bottom: 10px; }
+        .product-name { font-size: 16px; color: #333; margin-bottom: 10px; height: 40px; overflow: hidden; font-weight: 500; }
+        .product-price { color: var(--main-purple); font-weight: bold; font-size: 18px; }
+
+        footer {
+            background: white; padding: 30px 5%; margin-top: 50px;
+            border-top: 3px solid var(--main-purple); text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" onclick="window.location.assign('index.html')">
+            <img src="imgs/logo.png" alt="Logo"> <span>NAM NGUYỄN PHARMA</span>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Tìm kiếm thuốc và nhấn Enter...">
+        </div>
+
+        <div class="user-menu">
+            <img src="imgs/logo.png" id="userAvatar" class="avatar" alt="User">
+            <div class="dropdown-content" id="dropdownMenu">
+                <a href="profile.html"><i class="fas fa-user"></i> Xem tài khoản</a>
+                <a href="history.html"><i class="fas fa-history"></i> Lịch sử mua hàng</a>
+                <div id="adminSection"></div> 
+                <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="promo-banner">🎉 CHÀO MỪNG ĐẾN VỚI HỆ THỐNG THUỐC NAM NGUYỄN!</div>
+    <div class="product-grid" id="productContainer"></div>
+
+    <footer>
+        <p><strong>NGƯỜI SÁNG LẬP: NGUYỄN THÀNH NAM</strong></p>
+        <p>Lớp: TH29.16 | Đồ án môn: Điện toán đám mây</p>
+    </footer>
+
+    <script>
+        // CHỐT CỔNG 3000 CHO SERVER
+        const serverURL = "http://localhost:3000"; 
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        // 1. Kiểm tra đăng nhập
+        if (!user) {
+            window.location.assign('login.html');
+        } else {
+            let avatarPath = user.username === 'admin' ? 'imgs/admin.jpg' : (user.avatar_url || 'imgs/logo.png');
+            if (avatarPath.startsWith('/uploads')) avatarPath = serverURL + avatarPath;
+
+            const imgElement = document.getElementById('userAvatar');
+            imgElement.src = avatarPath;
+            imgElement.onerror = function() { this.src = 'imgs/logo.png'; };
+
+            if (user.username === 'admin') {
+                document.getElementById('adminSection').innerHTML = `
+                    <hr style="border: 0.5px solid #eee; margin: 5px 0;">
+                    <a href="add-medicine.html" class="admin-only"><i class="fas fa-plus-circle"></i> Thêm thuốc mới</a>
+                    <a href="manage-medicine.html" class="admin-only"><i class="fas fa-tools"></i> Quản lý thuốc</a>
+                    <hr style="border: 0.5px solid #eee; margin: 5px 0;">
+                `;
+            }
+        }
+
+        // 2. Hàm tải sản phẩm (Sửa tham số để tránh lỗi [object Event])
+        async function loadProducts(targetUrl) {
+            // Nếu không truyền targetUrl, dùng mặc định
+            const finalUrl = targetUrl && typeof targetUrl === 'string' ? targetUrl : `${serverURL}/api/products`;
+            
+            try {
+                const response = await fetch(finalUrl);
+                const contentType = response.headers.get("content-type");
+                
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new TypeError("Server không trả về JSON. Kiểm tra Node.js (Port 3000)!");
+                }
+
+                const products = await response.json();
+                const container = document.getElementById('productContainer');
+                
+                if (!products || products.length === 0) {
+                    container.innerHTML = `<h3 style="grid-column: 1/-1; text-align: center; color: #666;">Kho thuốc hiện đang trống.</h3>`;
+                    return;
+                }
+
+                container.innerHTML = products.map(p => {
+                    let img = p.image_urls;
+                    if (img && !img.startsWith('http')) {
+                        img = img.startsWith('/') ? serverURL + img : serverURL + '/' + img;
+                    } else if (!img) {
+                        img = 'imgs/logo.png';
+                    }
+                    
+                    return `
+                        <div class="product-card" onclick="window.location.assign('product-detail.html?id=${p.id}')">
+                            <img src="${img}" onerror="this.src='imgs/logo.png'">
+                            <div class="product-name">${p.name}</div>
+                            <div class="product-price">${Number(p.price).toLocaleString()} đ</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) { 
+                console.error("Lỗi:", error);
+                document.getElementById('productContainer').innerHTML = `<h3 style="grid-column: 1/-1; text-align: center; color: red;">Không thể kết nối Server (Port 3000)</h3>`;
+            }
+        }
+
+        // 3. Tìm kiếm
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = e.target.value.trim();
+                loadProducts(query ? `${serverURL}/api/products/search?q=${encodeURIComponent(query)}` : null);
+            }
+        });
+
+        function logout() { 
+            localStorage.removeItem('user'); 
+            window.location.assign('login.html'); 
+        }
+
+        // KHỞI CHẠY ĐÚNG CÁCH (Tránh truyền Event vào hàm)
+        window.onload = function() {
+            loadProducts();
+        };
+    </script>
+</body>
+</html>

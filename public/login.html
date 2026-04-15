@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Cửa hàng thuốc Nam Nguyễn</title>
+    <style>
+        :root { --main-purple: #9d50bb; --light-purple: #e0c3fc; --bg-color: #f5f0ff; }
+        body { background: linear-gradient(135deg, var(--main-purple), var(--light-purple)); font-family: sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+        .login-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 380px; text-align: center; }
+        h2 { color: var(--main-purple); margin-bottom: 25px; }
+        .input-group { margin-bottom: 20px; }
+        input { width: 100%; padding: 14px 20px; border: 2px solid #eee; border-radius: 30px; box-sizing: border-box; outline: none; transition: 0.3s; font-size: 16px; }
+        input:focus { border-color: var(--main-purple); }
+        .btn-login { width: 100%; padding: 14px; background: var(--main-purple); color: white; border: none; border-radius: 30px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .options { margin-top: 25px; display: flex; justify-content: space-between; font-size: 14px; }
+        .options a { color: #777; text-decoration: none; }
+
+        /* MODAL STYLE */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+        .modal-content { background: white; width: 350px; margin: 10% auto; padding: 30px; border-radius: 15px; text-align: left; }
+        .question-box { background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px; color: #555; font-style: italic; border-left: 4px solid var(--main-purple); }
+        .new-password-box { background: #e8f5e9; padding: 15px; border-radius: 8px; border: 2px dashed #2e7d32; text-align: center; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Đăng Nhập</h2>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Tên tài khoản" required>
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Mật khẩu" required>
+        </div>
+        <button class="btn-login" id="btnLogin">Đăng Nhập</button>
+        <div class="options">
+            <a href="register.html">Đăng ký tài khoản</a>
+            <a href="#" onclick="showForgotModal()">Quên mật khẩu?</a>
+        </div>
+    </div>
+
+    <div id="forgotModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: var(--main-purple); margin-top: 0;">Khôi phục mật khẩu</h3>
+            <p style="font-size: 13px;">Nhập tên tài khoản để lấy câu hỏi:</p>
+            <input type="text" id="forgotUsername" placeholder="Tên tài khoản của Nam">
+            <button onclick="fetchQuestion()" style="width: 100%; margin-bottom: 15px; padding: 8px; cursor: pointer;">Lấy câu hỏi</button>
+
+            <div id="questionArea" style="display: none;">
+                <label>Câu hỏi bảo mật của Nam:</label>
+                <div id="displayQuestion" class="question-box"></div>
+                
+                <label>Nhập câu trả lời:</label>
+                <input type="text" id="securityAnswer" placeholder="Trả lời tại đây...">
+                <button class="btn-login" onclick="verifyAndReset()" style="font-size: 15px; padding: 10px;">Xác minh & Lấy MK mới</button>
+            </div>
+
+            <div id="passwordResult" class="new-password-box">
+                <p style="margin: 0; font-size: 14px; color: #2e7d32;">Mật khẩu mới của Nam là:</p>
+                <strong id="newPassText" style="font-size: 20px; letter-spacing: 2px;"></strong>
+                <p style="font-size: 11px; margin-top: 10px; color: #666;">(Nam hãy copy và đổi lại sau khi đăng nhập nhé!)</p>
+            </div>
+
+            <button onclick="closeModal()" style="width: 100%; margin-top: 15px; background: none; border: none; color: #888; cursor: pointer;">Đóng</button>
+        </div>
+    </div>
+
+    <script>
+        const serverURL = "http://localhost:3000";
+
+        // Xử lý Đăng nhập (giữ nguyên logic cũ của Nam)
+        const handleLogin = async () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!username || !password) return alert("Nhập đủ thông tin Nam ơi!");
+
+            // Admin check
+            if (username === 'admin' && password === 'admin123') {
+                localStorage.setItem('user', JSON.stringify({fullname: "Admin Nam", username: "admin"}));
+                window.location.assign('index.html');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${serverURL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    window.location.assign('index.html'); 
+                } else { alert(result.error); }
+            } catch (e) { alert("Lỗi server rồi Nam!"); }
+        };
+
+        // --- LOGIC QUÊN MẬT KHẨU ---
+        function showForgotModal() { document.getElementById('forgotModal').style.display = "block"; }
+        function closeModal() { 
+            document.getElementById('forgotModal').style.display = "none";
+            document.getElementById('passwordResult').style.display = "none";
+            document.getElementById('questionArea').style.display = "none";
+        }
+
+        // BƯỚC 1: Lấy câu hỏi từ username
+        async function fetchQuestion() {
+            const user = document.getElementById('forgotUsername').value;
+            if(!user) return alert("Nhập tên tài khoản đã Nam!");
+            
+            const res = await fetch(`${serverURL}/api/get-question/${user}`);
+            const data = await res.json();
+            
+            if(res.ok) {
+                document.getElementById('displayQuestion').innerText = data.question;
+                document.getElementById('questionArea').style.display = "block";
+            } else { alert("Tài khoản này không tồn tại!"); }
+        }
+
+        // BƯỚC 2: Xác minh và hiện mật khẩu mới
+        async function verifyAndReset() {
+            const username = document.getElementById('forgotUsername').value;
+            const answer = document.getElementById('securityAnswer').value;
+
+            const res = await fetch(`${serverURL}/api/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, answer })
+            });
+
+            const data = await res.json();
+            if(res.ok) {
+                document.getElementById('newPassText').innerText = data.newPassword;
+                document.getElementById('passwordResult').style.display = "block";
+                document.getElementById('questionArea').style.display = "none";
+            } else {
+                alert(data.error);
+            }
+        }
+
+        document.getElementById('btnLogin').addEventListener('click', handleLogin);
+    </script>
+</body>
+</html>
