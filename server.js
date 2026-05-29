@@ -25,6 +25,7 @@ const upload = multer({ storage: storage });
 app.use('/uploads', express.static('public/uploads'));
 
 const connection = mysql.createConnection({
+    process.env.DATABASE_URL || 'mysql://avnadmin:AVNS_1dmnhkjJtV6SOOb8uEV@nam-pharma-db-thuannam936-7c38.i.aivencloud.com:12666/defaultdb?ssl-mode=REQUIRED'
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 12666, 
     user: process.env.DB_USER || 'avnadmin',     
