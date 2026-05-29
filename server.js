@@ -25,9 +25,16 @@ const upload = multer({ storage: storage });
 app.use('/uploads', express.static('public/uploads'));
 
 // 2. Kết nối MySQL bằng URI đầy đủ
-const connection = mysql.createConnection(
-    process.env.DATABASE_URL || 'mysql://avnadmin:AVNS_1dmnhkjJtV6SOOb8uEV@nam-pharma-db-thuannam936-7c38.i.aivencloud.com:12666/defaultdb?ssl-mode=REQUIRED'
-);
+const connection = mysql.createConnection({
+    host: 'nam-pharma-db-thuannam936-7c38.l.aivencloud.com', // Thay chữ .i. bằng chữ .l. như thông tin định tuyến chuẩn của Aiven
+    port: 12666, 
+    user: 'avnadmin',     
+    password: 'AVNS_1dmnhkjJtV6SOOb8uEV',   
+    database: 'defaultdb',
+    ssl: {
+        rejectUnauthorized: false 
+    }
+});
 
 connection.connect(err => {
     if (err) {
