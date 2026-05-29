@@ -24,14 +24,15 @@ const upload = multer({ storage: storage });
 
 app.use('/uploads', express.static('public/uploads'));
 
-// 2. Kết nối MySQL bằng URI đầy đủ
-// 2. Kết nối MySQL bằng Connection String kết hợp cấu hình SSL của thư viện mysql2
-const connection = mysql.createConnection({
-    uri: 'mysql://avnadmin:AVNS_1dmnhkjJtV6SOOb8uEV@nam-pharma-db-thuannam936-7c38.i.aivencloud.com:12666/defaultdb',
-    ssl: {
-        rejectUnauthorized: false
+// 2. Kết nối MySQL
+const connection = mysql.createConnection(
+    'mysql://avnadmin:AVNS_1dmnhkjJtV6SOOb8uEV@nam-pharma-db-thuannam936-7c38.i.aivencloud.com:12666/defaultdb',
+    {
+        ssl: {
+            rejectUnauthorized: false
+        }
     }
-});
+);
 
 connection.connect(err => {
     if (err) {
